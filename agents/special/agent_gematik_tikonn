@@ -1,0 +1,769 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# SPDX-FileCopyrightText: © 2022 ELABIT GmbH <mail@elabit.de>
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+from pathlib import Path
+import argparse
+import logging
+import json
+import unicodedata
+import re
+import os
+import sys
+from zeep import helpers, Client, Settings
+import zeep
+import datetime
+import hashlib
+from abc import abstractmethod, ABC
+from collections import OrderedDict
+from typing import Any, Dict, List, Mapping, Optional, Sequence
+from functools import cached_property
+
+from cmk.special_agents.utils.agent_common import special_agent_main
+from cmk.special_agents.utils.argument_parsing import Args
+from cmk.special_agents.utils.argument_parsing import create_default_argument_parser
+from cmk.utils.exceptions import MKGeneralException
+
+LOGGING = logging.getLogger("agent_gematik_konnektor")
+
+SEVERITY = {"Info": "O", "Warning": "W", "Fatal": "C", "Error": "C"}
+
+
+class AgentGematikKonnektor:
+    """Checkmk Special Agent for Gematik Konnektors"""
+
+    def run(self):
+        special_agent_main(self.parse_arguments, self.main)
+
+    def parse_arguments(self, argv: Optional[Sequence[str]]) -> Args:
+        parser = create_default_argument_parser(description=self.__doc__)
+        parser.add_argument(
+            "-H",
+            "--hostname",
+            dest="host",
+            required=True,
+            help="IP/Hostname des Konnektors",
+        )
+        parser.add_argument(
+            "-p", "--port", dest="port", default=80, required=False, help="TCP Port"
+        )
+        parser.add_argument(
+            "-m",
+            "--mandant",
+            dest="mandant_id",
+            required=True,
+            help="MandantID",
+        )
+        parser.add_argument(
+            "-W",
+            "--wsdlversion",
+            help="""WSDL version der einzelnen Services. Beispiel: --wsdlversion EventService:7.2.0""",
+        )
+        parser.add_argument(
+            "-c", "--client", dest="client_id", required=True, help="Client System ID"
+        )
+        parser.add_argument(
+            "-w",
+            "--workplaces",
+            dest="workplace_ids",
+            required=True,
+            help="Workplace IDs, kommagetrennt",
+        )
+        return parser.parse_args(argv)
+
+    def main(self, args: Args):
+        kontexts = [
+            Kontext(args.mandant_id, args.client_id, workplace_id)
+            for workplace_id in args.workplace_ids.split(",")
+        ]
+        konnektor = Konnektor(args.host, args.port)
+        # Todo Section manager
+
+        strategy = EventServiceGetResourceInformation()
+        session = Session(konnektor, strategy, kontexts)
+        session.produce_output()
+
+        strategy = EventServiceGetCardTerminals()
+        session = Session(konnektor, strategy, kontexts)
+        session.produce_output()
+
+
+class Kontext:
+    """siehe ILF 3.3.1 Kontext / TIP1-A_4959
+    Mandant, Arbeitsplatz und Primärsystem"""
+
+    def __init__(self, mandant, client_id, workplace_id):
+        self.mandant = mandant
+        self.client_id = client_id
+        self.workplace_id = workplace_id
+
+
+class Konnektor(object):
+    """
+    Dienst- und Endpunktverzeichnis: IP:Port/connector.sds:
+        <ns3:Version TargetNamespace="http://ws.gematik.de/conn/EventService/WSDL/v7.2" Version="7.2.0">
+            <ns3:Abstract>Operationen zum Systeminformationservice gemäß WSDL 7.2.0</ns3:Abstract>
+            <ns3:Endpoint Location="http://172.16.11.11:80/service/systeminformationservice"/>
+            <ns3:EndpointTLS Location="https://172.16.11.11:443/service/systeminformationservice"/>
+        </ns3:Version>
+    TargetNamespace: http://ws.gematik.de/conn/EventService/WSDL/v7.2
+    """
+
+    def __init__(self, ip_address="localhost", port=8080, sds_path=None):
+
+        self.ip_address = ip_address
+        self.port = port
+        # self.host_url = "http://{}:{}/service/systeminformationservice".format(
+        #     self.ip_address, str(self.port)
+        # )
+
+        # TIP1-A_4962 : In seinem Dienstverzeichnisdienst stellt der Konnektor
+        # unter einer definierten URL in einem XML-Dokument („connector.sds“)
+        # die Liste aller Dienste, sowie deren Versionen und Endpunkte bereit,
+        # die vom Konnektor angeboten werden."""
+        if sds_path is None:
+            self.sds_path = "connector.sds"
+        else:
+            self.sds_path = sds_path
+
+        # self.last_request = ""
+        # self.last_response = ""
+        # self.last_statuscode = 0
+        # self.last_message = ""
+        # self.last_reply_headers = ""
+        # self.last_reply_body = ""
+
+    @property
+    def url(self):
+        return "http://" + self.ip_address + ":" + str(self.port)
+
+
+def zeep2dict(f_wrapped):
+    """A decorator function to convert Zeep nested object structures into a dict
+    (https://stackoverflow.com/questions/56758078/is-there-an-easy-way-to-convert-zeep-response-to-json-pandas-xml)"""  # noqa
+
+    def wrapper(*args):
+        zeep_obj = f_wrapped(*args)
+        return convert(zeep_obj)
+
+    def convert(obj):
+        if isinstance(obj, zeep.xsd.valueobjects.CompoundValue):
+            obj = helpers.serialize_object(obj)
+
+        if isinstance(obj, datetime.date):
+            return obj.isoformat()
+
+        if isinstance(obj, list):
+            return [convert(subitem) for subitem in obj]
+
+        if isinstance(obj, dict):
+            return {k: convert(subvalue) for k, subvalue in obj.items()}
+
+        # str, int, bool, ...
+        return obj
+
+    return wrapper
+
+
+# Strategy Interface
+class EventService(ABC):
+    """Operationen zum Systeminformationservice gemäß WSDL 7.2.0"""
+
+    def __init__(self, path=None):
+        # TODO: wozu ist die config?
+        if path is None:
+            self.cfg_path = "config/systeminformationservice"
+        else:
+            self.cfg_path = path
+
+        # Verzeichnis aller WSDLs für Konnektoren (der Rest wurde aus dem Verzeichnis gelöscht)
+        # git clone https://github.com/gematik/api-telematik.git
+        self.wsdl_root = (
+            Path(os.getenv("OMD_ROOT")) / "local/lib/wsdl/api-telematik-OPB4/conn"
+        )
+
+        self.servicename = "EventService"
+        # TODO: Auslesen aus SDS
+        # def Get_SDS(self):
+        #     socket.setdefaulttimeout(3)
+        #     f = request.urlopen(self.URL + "/" + self.SDS)
+        #     self.SDS = f.read()
+        #     return self.SDS
+        self.svc_path = "service/systeminformationservice"
+
+    @cached_property
+    def wsdl(self) -> Path:
+        wsdl_file = self.wsdl_root / "{}.wsdl".format(self.servicename)
+        return wsdl_file
+
+    @abstractmethod
+    def do_soap(self):
+        pass
+
+
+# concrete Strategy
+class EventServiceGetResourceInformation(EventService):
+    """TIP1-A_4607 - Operation GetResourceInformation
+    Gibt Informationen zu einer Ressource (Karte, KT) oder dem Konnektor selbst zurück.
+    Wurde keines der Elemente CtId, SlotId, Iccsn übergeben, so wird davon ausgegangen,
+    dass der Aufrufer Informationen zum Konnektor selbst abfragen möchte."""
+
+    _BODY = """
+        <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:v7="http://ws.gematik.de/conn/EventService/v7.2" xmlns:v2="http://ws.gematik.de/conn/ConnectorContext/v2.0" xmlns:v5="http://ws.gematik.de/conn/ConnectorCommon/v5.0" xmlns:v21="http://ws.gematik.de/conn/CardServiceCommon/v2.0">
+        <soapenv:Header/>
+        <soapenv:Body>
+            <v7:GetResourceInformation>
+            <v2:Context>
+                <v5:MandantId>%s</v5:MandantId>
+                <v5:ClientSystemId>%s</v5:ClientSystemId>
+                <v5:WorkplaceId>%s</v5:WorkplaceId>
+            </v2:Context>
+            </v7:GetResourceInformation>
+        </soapenv:Body>
+        </soapenv:Envelope>
+    """  # noqa
+
+    def __init__(self, path=None):
+        super().__init__(path)
+
+    @property
+    def body(self):
+        return self._BODY % (
+            self.kontext.mandant,
+            self.kontext.client_id,
+            self.kontext.workplace_id,
+        )
+
+    @zeep2dict
+    def do_soap(self, binding, context):
+        # TODO: implement SOAP method
+        # print(self.body)
+        # TODO: Error handling for SOAP call
+        response = binding.GetResourceInformation(Context=context)
+        return response
+
+    def print_output(self, binding, contexts):
+        faulty_wp = []
+        response = None
+        for c in contexts:
+            try:
+                # für den Konnektor genügt _irgendein_ Kontext, probiere alle durch
+                response = self.do_soap(binding, c)
+                break
+            except zeep.exceptions.Fault as fault:
+
+                if fault.message == "Ungültige Arbeitsplatz-ID":
+                    faulty_wp.append(c.WorkplaceId)
+
+        if response:
+            self.print_connector_status(response)
+            self.print_connector_events(response)
+        else:
+            print("<<<gematik_tikonn:sep(0)>>>")
+            if len(faulty_wp) > 0:
+                print("ERROR: Fehlerhafte Arbeitsplatz-IDs:" + ", ".join(faulty_wp))
+            else:
+                print(
+                    "ERROR: Keine Verbindung zu diesem Konnektor möglich. Mandant, Client und Workplace-ID prüfen."
+                )
+
+    def print_connector_status(self, response):
+        print("<<<gematik_tikonn:sep(0)>>>")
+        # TODO: ugly.... remove operating state temporarily
+        operating_state = response["Connector"].pop("OperatingState")
+        print(json.dumps(response["Connector"]))
+        response["Connector"]["OperatingState"] = operating_state
+
+    def print_connector_events(self, response):
+        state_dir = Path(
+            os.getenv("OMD_ROOT", "/"), "tmp/check_mk/special_agent_gematik_connector/"
+        )
+        state_dir.mkdir(
+            parents=True,
+            exist_ok=True,
+        )
+
+        events = response["Connector"]["OperatingState"]["_value_1"]
+
+        # find events which do not have a state file => send
+        print("<<<logwatch>>>")
+        print("[[[Events]]]")
+        for e in events:
+            event = e["ErrorState"]
+            event_ident = event["ValidFrom"] + event["ErrorCondition"]
+            checksum = hashlib.md5(event_ident.encode("utf8")).hexdigest()[:6]
+            state_file = state_dir.joinpath(
+                "event_" + checksum + "_" + slugify(event["ErrorCondition"])
+            )
+            pass
+            # Wenn event aktiv:
+            if event["Value"] is True:
+                if not state_file.exists():
+                    line = "{};{};{};{}".format(
+                        event["ValidFrom"],
+                        event["Severity"],
+                        event["Type"],
+                        event["ErrorCondition"],
+                    )
+                    print("{} {}".format(SEVERITY[event["Severity"]], line))
+                    # FIXME only for debugging
+                    state_file.touch()
+            else:
+                state_file.unlink(missing_ok=True)
+
+
+# concrete Strategy
+class EventServiceGetCardTerminals(EventService):
+    """TIP1-A_4607 - Operation GetResourceInformation
+    Gibt Informationen zu einer Ressource (Karte, KT) oder dem Konnektor selbst zurück.
+    Wurde keines der Elemente CtId, SlotId, Iccsn übergeben, so wird davon ausgegangen,
+    dass der Aufrufer Informationen zum Konnektor selbst abfragen möchte."""
+
+    _BODY = """
+        <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:v7="http://ws.gematik.de/conn/EventService/v7.2" xmlns:v2="http://ws.gematik.de/conn/ConnectorContext/v2.0" xmlns:v5="http://ws.gematik.de/conn/ConnectorCommon/v5.0" xmlns:v21="http://ws.gematik.de/conn/CardServiceCommon/v2.0">
+        <soapenv:Header/>
+        <soapenv:Body>
+            <v7:GetResourceInformation>
+            <v2:Context>
+                <v5:MandantId>%s</v5:MandantId>
+                <v5:ClientSystemId>%s</v5:ClientSystemId>
+                <v5:WorkplaceId>%s</v5:WorkplaceId>
+            </v2:Context>
+            </v7:GetResourceInformation>
+        </soapenv:Body>
+        </soapenv:Envelope>
+    """  # noqa
+
+    def __init__(self, path=None):
+        super().__init__(path)
+
+    @property
+    def body(self):
+        return self._BODY % (
+            self.kontext.mandant,
+            self.kontext.client_id,
+            self.kontext.workplace_id,
+        )
+
+    @zeep2dict
+    def do_soap(self, binding, context):
+        # TODO: implement SOAP method
+        # print(self.body)
+        # TODO: Error handling for SOAP call
+        response = binding.GetCardTerminals(Context=context)
+        return response
+
+    def print_output(self, binding, contexts):
+        wp = []
+        wp_faulty = []
+
+        responses = []
+        for c in contexts:
+            try:
+
+                response = self.do_soap(binding, c)
+                responses.append(response)
+                wp.append(c.WorkplaceId)
+            except zeep.exceptions.Fault as fault:
+                if fault.message == "Ungültige Arbeitsplatz-ID":
+                    wp_faulty.append(c.WorkplaceId)
+
+        # if len(wp_faulty) > 0:
+        print("<<<gematik_tikonn:sep(0)>>>")
+        print(json.dumps({"wp": wp}))
+        print(json.dumps({"wp_faulty": wp_faulty}))
+
+        # print(
+        #     "ERROR: Fehlerhafte Arbeitsplatz-IDs/kein gültiger Kontext möglich mit: "
+        #     + ", ".join(wp_faulty)
+        # )
+
+        self.print_cardterminals(responses)
+
+    def print_cardterminals(self, responses):
+        card_terminals = []
+
+        for response in responses:
+            if "CardTerminals" in response and not response["CardTerminals"] == None:
+                terminals = response["CardTerminals"].get("CardTerminal", [])
+                # Spezifikation Tabelle 12: TAB_KON_508 Informationsmodell Attribute
+
+                for term in terminals:
+                    card_terminals.append(term["Name"].lower())
+                    print("<<<<{}>>>>".format(term["Name"].lower()))
+                    print("<<<gematik_cardterminal:sep(0)>>>")
+                    print(json.dumps(term))
+                    print("<<<<>>>>")
+            else:
+                pass
+        # Konnektor: alle Terminals
+        card_term_dict = {"card_terminals": card_terminals}
+        print("<<<gematik_tikonn:sep(0)>>>")
+        print(json.dumps(card_term_dict))
+
+
+class Section:
+    """
+    An agent section.
+    """
+
+    def __init__(self) -> None:
+
+        self._content: OrderedDict[str, Dict[str, Any]] = OrderedDict()
+
+    def insert(self, check_data: Dict[str, Any]) -> None:
+
+        for key, value in check_data.items():
+            if key not in self._content:
+                self._content[key] = value
+            else:
+                if isinstance(value, dict):
+                    self._content[key].update(value)
+                else:
+                    raise ValueError(
+                        "Key %s is already present and cannot be merged" % key
+                    )
+
+    def output(self) -> str:
+
+        return json.dumps(self._content)
+
+
+class PiggybackHost:
+    """
+    An element that bundles a collection of sections.
+    """
+
+    def __init__(self) -> None:
+
+        super().__init__()
+        self._sections: OrderedDict[str, Section] = OrderedDict()
+
+    def get(self, section_name: str) -> Section:
+
+        if section_name not in self._sections:
+            self._sections[section_name] = Section()
+        return self._sections[section_name]
+
+    def output(self) -> List[str]:
+
+        data = []
+        for name, section in self._sections.items():
+            data.append("<<<%s:sep(0)>>>" % name)
+            data.append(section.output())
+        return data
+
+
+class PiggybackGroup:
+    """
+    A group of elements where an element is e.g. a piggyback host.
+    """
+
+    def __init__(self) -> None:
+
+        self._elements: OrderedDict[str, PiggybackHost] = OrderedDict()
+
+    def get(self, element_name: str) -> PiggybackHost:
+
+        if element_name not in self._elements:
+            self._elements[element_name] = PiggybackHost()
+        return self._elements[element_name]
+
+    def join(
+        self, section_name: str, pairs: Mapping[str, Dict[str, Any]]
+    ) -> "PiggybackGroup":
+
+        for element_name, data in pairs.items():
+            section = self.get(element_name).get(section_name)
+            section.insert(data)
+        return self
+
+    def output(self, piggyback_prefix: str = "") -> List[str]:
+        data = []
+        for name, element in self._elements.items():
+            data.append("<<<<%s>>>>" % (piggyback_prefix + name))
+            data.extend(element.output())
+            data.append("<<<<>>>>")
+        return data
+
+
+# Context
+class Session:
+    def __init__(self, konnektor: Konnektor, service: EventService, kontexts):
+        self.service = service
+        self.konnektor = konnektor
+        if not type(kontexts) == list:
+            self.kontexts = [kontexts]
+        else:
+            self.kontexts = kontexts
+        self.zeep_settings = Settings(forbid_entities=False)
+        self._client = None
+
+    def _bind(self, wsdl):
+        """Verbindet zum Konnektor"""
+        location = "{}/{}".format(self.konnektor.url, self.service.svc_path)
+        # EventService.wsdl enthält ganz am Ende die Servicebeschreibung, inclusive des zu
+        # verwendenden Bindings "EventServiceBinding", das ebenfalls darin definiert ist.
+        # Das Binding legt fest, welche operationen daran erlaubt sind und welcher Endpunkt jeweils
+        # dafür verwendet wird.
+        # Zeep verbindet sich per default mit dem ersten Binding im WSDL. Dort steht aber nur ein
+        # generischer Name. Dieser wird deshalb mit einem "ServiceProxy"-Objekt
+        # (https://docs.python-zeep.org/en/master/client.html#creating-new-serviceproxy-objects)
+        # überschrieben, welches die IP der Kocobox enthält.
+
+        # TODO: das Binding ist streng genommen kein Property der Session, sondern des übergebenen
+        # Services.
+        binding = self.client.create_service(
+            "{http://ws.gematik.de/conn/EventService/WSDL/v7.2}EventServiceBinding",
+            location,
+        )
+        return binding
+
+    @property
+    def client(self):
+        if self._client is None:
+            # TODO: How can WSDL be loaded from variable?
+            # HEREIWAS
+            self._client = Client(str(self.service.wsdl), settings=self.zeep_settings)
+        return self._client
+
+    @property
+    def contexts(self):
+        # Der Datentyp "Kontext" muss erst geholt werden, damit er verwendet werden kann.
+        # https://docs.python-zeep.org/en/master/datastructures.html#creating-objects
+        # ->Für den Konnektor genügt es, einen Kontext mit _irgendeiner_ workplace-id zu verwenden.
+        # ->Für die Kartenterminals muss über die Kontexte iteriert werden.
+        contextType = self.client.get_type(
+            "{http://ws.gematik.de/conn/ConnectorContext/v2.0}ContextType"
+        )
+
+        return [
+            contextType(
+                MandantId=k.mandant,
+                ClientSystemId=k.client_id,
+                WorkplaceId=k.workplace_id,
+            )
+            for k in self.kontexts
+        ]
+
+    def produce_output(self):
+        """Erzeugt Agenten-Output anhand der hinterlegten Strategie."""
+        binding = self._bind(str(self.service.wsdl))
+        # response = self._service.do_soap(binding, self.context)
+
+        self.service.print_output(binding, self.contexts)
+
+        #    def GetResourceInformation(self):
+
+    #
+    #        return self.Kon.Do_SOAP("/config/systeminformationservice", "http://ws.gematik.de/conn/EventService/v7.2#GetResourceInformation", __body)
+
+    # def GetResourceInformation(self):
+    #     """Liefert Details zu einer Ressource (Kartenterminal, Karte, HSM)"""
+    #     return self.Kon.Do_SOAP(
+    #         "/config/systeminformationservice",
+    #         "http://ws.gematik.de/conn/EventService/v7.2#GetResourceInformation",
+    #     )
+
+    #     try:
+    #         self.last_reply_body = service.GetResourceInformation(Context=my_context)
+    #         return True
+    #     except:
+    #         print("2 K_SOAP - Fehler bei SOAP Call")
+    #         return False
+
+
+class SID:
+    """Siehe TIP1-A_4603 in Konnektorspezifikation, S. 229
+    Der Konnektor MUSS für Clients eine Basisanwendung "Systeminformationsdienst" (SID, aka "EventService") anbieten."""
+
+    BODY_GetCards = """
+          <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:v7="http://ws.gematik.de/conn/EventService/v7.2" xmlns:v2="http://ws.gematik.de/conn/ConnectorContext/v2.0" xmlns:v5="http://ws.gematik.de/conn/ConnectorCommon/v5.0" xmlns:v21="http://ws.gematik.de/conn/CardServiceCommon/v2.0">
+           <soapenv:Header/>
+           <soapenv:Body>
+              <v7:GetCards mandant-wide="%s">
+                 <v2:Context>
+                    <v5:MandantId>%s</v5:MandantId>
+                    <v5:ClientSystemId>%s</v5:ClientSystemId>
+                    <v5:WorkplaceId>%s</v5:WorkplaceId>
+                 </v2:Context>
+              </v7:GetCards>
+           </soapenv:Body>
+          </soapenv:Envelope>
+    """  # noqa
+
+    BODY_GetCardTerminals = """
+        <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:v7="http://ws.gematik.de/conn/EventService/v7.2" xmlns:v2="http://ws.gematik.de/conn/ConnectorContext/v2.0" xmlns:v5="http://ws.gematik.de/conn/ConnectorCommon/v5.0">
+            <soapenv:Header/>
+            <soapenv:Body>
+                <v7:GetCardTerminals mandant-wide="%s">
+                <v2:Context>
+                    <v5:MandantId>%s</v5:MandantId>
+                    <v5:ClientSystemId>%s</v5:ClientSystemId>
+                    <v5:WorkplaceId>%s</v5:WorkplaceId>
+                </v2:Context>
+                </v7:GetCardTerminals>
+            </soapenv:Body>
+        </soapenv:Envelope>
+    """  # noqa
+
+    BODY_GetSubscription = """
+        <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:v7="http://ws.gematik.de/conn/EventService/v7.2" xmlns:v2="http://ws.gematik.de/conn/ConnectorContext/v2.0" xmlns:v5="http://ws.gematik.de/conn/ConnectorCommon/v5.0">
+        <soapenv:Header/>
+        <soapenv:Body>
+            <v7:GetSubscription mandant-wide="%s">
+            <v2:Context>
+                <v5:MandantId>%s</v5:MandantId>
+                <v5:ClientSystemId>%s</v5:ClientSystemId>
+                <v5:WorkplaceId>%s</v5:WorkplaceId>
+            </v2:Context>
+            </v7:GetSubscription>
+        </soapenv:Body>
+        </soapenv:Envelope>
+    """  # noqa
+
+    BODY_Subscribe = """
+        <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:v7="http://ws.gematik.de/conn/EventService/v7.2" xmlns:v2="http://ws.gematik.de/conn/ConnectorContext/v2.0" xmlns:v5="http://ws.gematik.de/conn/ConnectorCommon/v5.0">
+            <soapenv:Header/>
+            <soapenv:Body>
+            <v7:Subscribe>
+                <v2:Context>
+                    <v5:MandantId>%s</v5:MandantId>
+                    <v5:ClientSystemId>%s</v5:ClientSystemId>
+                    <v5:WorkplaceId>%s</v5:WorkplaceId>
+                </v2:Context>
+                <v7:Subscription>
+                    <v7:EventTo>cetp://%s:%s</v7:EventTo>
+                    <v7:Topic>%s</v7:Topic>
+                </v7:Subscription>
+            </v7:Subscribe>
+            </soapenv:Body>
+        </soapenv:Envelope>
+    """  # noqa
+
+    BODY_UnSubscribe = """
+            <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:v7="http://ws.gematik.de/conn/EventService/v7.2" xmlns:v2="http://ws.gematik.de/conn/ConnectorContext/v2.0" xmlns:v5="http://ws.gematik.de/conn/ConnectorCommon/v5.0">
+           <soapenv:Header/>
+           <soapenv:Body>
+              <v7:Unsubscribe>
+                 <v2:Context>
+                    <v5:MandantId>%s</v5:MandantId>
+                    <v5:ClientSystemId>%s</v5:ClientSystemId>
+                    <v5:WorkplaceId>%s</v5:WorkplaceId>
+                 </v2:Context>
+                 <v7:EventTo>cetp://%s:%s</v7:EventTo>
+              </v7:Unsubscribe>
+           </soapenv:Body>
+        </soapenv:Envelope>
+    """  # noqa
+
+    def GetCardTerminals(self, Mandantwide):
+        """Liefert die Liste der Kartenterminals, auf die der aufrufende Mandant und das
+        aufrufende Clientsystem zugreifen dürfen (siehe Zugriffsberechtigungsdienst)
+        sowie deren aktuelle Verfügbarkeit. Verfügbarkeit bedeutet im Falle eines
+        eHealth-Kartenterminals, dass der Konnektor eine Verbindung zum
+        Kartenterminal aktuell hält."""
+        __body = self.BODY_GetCardTerminals % (
+            Mandantwide,
+            self.Kon.MandantId,
+            self.Kon.ClientSystemId,
+            self.Kon.WorkplaceId,
+        )
+        return self.Kon.Do_SOAP(
+            # "/config/systeminformationservice",
+            "http://ws.gematik.de/conn/EventService/v7.2#GetCardTerminals",
+            __body,
+        )
+
+    # def GetCards(self, Mandantwide, CardType=None) :
+    def GetCards(self, Mandantwide):
+        """Liefert Informationen zu den in den Kartenterminals verfügbaren Karten
+        zurück, die in Kartenterminals stecken, auf die Mandant und Clientsystem
+        zugreifen dürfen. Insbesondere umfasst die Information die sog. KartenHandles. Die Karten-Handles können bei anderen Konnektoraufrufen zur
+        Adressierung von Karten genutzt werden."""
+        #    if CardType==None:
+        #        #print CardType
+        #        self.BODY_GetCards=self.BODY_GetCards.replace('<v21:CardType>%s</v21:CardType>'+chr(10), '')
+        #        print self.BODY_GetCards
+        __body = self.BODY_GetCards % (
+            Mandantwide,
+            self.Kon.MandantId,
+            self.Kon.ClientSystemId,
+            self.Kon.WorkplaceId,
+        )
+        return self.Kon.Do_SOAP(
+            # "/config/systeminformationservice",
+            "http://ws.gematik.de/conn/EventService/v7.2#GetCards",
+            __body,
+        )
+
+    def GetSubscription(self, Mandantwide):
+        """Abfrage der angemeldeten Zustellungen von Ereignissen"""
+        __body = self.BODY_GetSubscription % (
+            Mandantwide,
+            self.Kon.MandantId,
+            self.Kon.ClientSystemId,
+            self.Kon.WorkplaceId,
+        )
+        return self.Kon.Do_SOAP(
+            # "/config/systeminformationservice",
+            "http://ws.gematik.de/conn/EventService/v7.2#GetSubscription",
+            __body,
+        )
+
+    def Subscribe(self, Evt_Ip, Evt_Port, Topic):
+        """Anmeldung der Zustellung von Ereignissen"""
+        __body = self.BODY_Subscribe % (
+            self.Kon.MandantId,
+            self.Kon.ClientSystemId,
+            self.Kon.WorkplaceId,
+            Evt_Ip,
+            Evt_Port,
+            Topic,
+        )
+        return self.Kon.Do_SOAP(
+            # "/config/systeminformationservice",
+            "http://ws.gematik.de/conn/EventService/v7.2#Subscribe",
+            __body,
+        )
+
+    def UnSubscribe(self, Evt_Ip, Evt_Port):
+        """Abmelden von der Zustellung von Ereignissen"""
+        __body = self.BODY_UnSubscribe % (
+            self.Kon.MandantId,
+            self.Kon.ClientSystemId,
+            self.Kon.WorkplaceId,
+            Evt_Ip,
+            Evt_Port,
+        )
+        return self.Kon.Do_SOAP(
+            # "/config/systeminformationservice",
+            "http://ws.gematik.de/conn/EventService/v7.2#UnSubscribe",
+            __body,
+        )
+
+
+def slugify(value, allow_unicode=False):
+    """
+    Taken from https://github.com/django/django/blob/master/django/utils/text.py
+    Convert to ASCII if 'allow_unicode' is False. Convert spaces or repeated
+    dashes to single dashes. Remove characters that aren't alphanumerics,
+    underscores, or hyphens. Convert to lowercase. Also strip leading and
+    trailing whitespace, dashes, and underscores.
+    """
+    value = str(value)
+    if allow_unicode:
+        value = unicodedata.normalize("NFKC", value)
+    else:
+        value = (
+            unicodedata.normalize("NFKD", value)
+            .encode("ascii", "ignore")
+            .decode("ascii")
+        )
+    value = re.sub(r"[^\w\s-]", "", value.lower())
+    return re.sub(r"[-\s]+", "-", value).strip("-_")
+
+
+if __name__ == "__main__":
+    AgentGematikKonnektor().run()
