@@ -1,0 +1,5 @@
+*.mkp
+.coverage
+__pycache__
+debug.log
+.vscode/tasks.json

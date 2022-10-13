@@ -1,0 +1,29 @@
+#!/usr/bin/python
+# SPDX-FileCopyrightText: © 2022 ELABIT GmbH <mail@elabit.de>
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+def agent_gematik_tikonn_arguments(params, hostname, ipaddress):
+    # WSDL-Versionen:
+    # [0] EventService
+    # [1] SignatureService
+    wsdl_v_eventservice = params["wsdl_versions"][0]
+    wsdl_v_signatureservice = params["wsdl_versions"][1]
+    workplace_ids = ",".join(params["workplace_ids"])
+    args = [
+        "--hostname",
+        ipaddress,
+        "--mandant",
+        params["mandant_id"],
+        "--client",
+        params["client_id"],
+        "--workplaces",
+        workplace_ids,
+        "--wsdlversion",
+        "EventService:{}".format(wsdl_v_eventservice),
+        "--wsdlversion",
+        "SignatureService:{}".format(wsdl_v_signatureservice),
+    ]
+    return args
+
+
+special_agent_info["gematik_tikonn"] = agent_gematik_tikonn_arguments

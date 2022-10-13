@@ -1,0 +1,18 @@
+{
+    "title": "Gematik TI-Konnektoren",
+    "name": "gematik_tikonn",
+    "description": "Special Agent für TI-Konnektoren (=Hardwarekomponenten, welche die IT von Arztpraxen, Apotheken, Kliniken usw. über ein Transportnetz mit der sog. Telematikinfrastruktur verbinden). Die 'Nationale Agentur für Digitale Medizin' (gematik) trägt die Gesamtverantwortung für diese Infrastruktur und definiert die Standards für die Dienste.",
+    "author": "Simon Meggle <simon.meggle@elabit.de>",
+    "download_url": "https://github.com/elabit/gemtaik-tikonn/releases",
+    "files": {
+        "agent_based": ["gematik_tikonn.py"],
+        "agents": ["special/agent_gematik_tikonn"],
+        "checks": ["agent_gematik_tikonn"],
+        "web": [
+            "plugins/wato/check_parameters_gematik_tikonn.py",
+            "plugins/wato/datasource_gematik_tikonn.py",
+            "plugins/wato/discovery_gematik_tikonn.py"
+        ]
+    },
+    "version.min_required": "2.0.0"
+}

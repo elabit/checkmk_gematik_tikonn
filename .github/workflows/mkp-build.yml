@@ -1,0 +1,44 @@
+name: MKP-Build
+
+on:
+  push:
+    branches:
+      - "**"
+    tags-ignore:
+      - "v*"
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  # ////////////////////////////////////////////////////////////////////////
+
+  build:
+    name: Build MKP
+    runs-on: ubuntu-latest
+    container:
+      image: checkmk/check-mk-raw:2.1.0-latest
+    env:
+      OMD_ROOT: /omd/sites/cmk
+      OMD_SITE: cmk
+      CMK_SITE_ID: cmk
+      WORKSPACE: ${{ github.workspace }}
+
+    steps:
+      - name: Install packages
+        run: apt update && apt-get -y install jq tree
+      - name: Create Checkmk Site
+        run: /docker-entrypoint.sh /bin/true
+      - name: Checkout project repository
+        uses: actions/checkout@v3
+      - name: Link repository files into container
+        run: .devcontainer/linkfiles.sh
+      - name: Update GITHUB_PATH
+        run: echo "/omd/sites/cmk/bin" >> $GITHUB_PATH
+      - name: Execute build script
+        run: .devcontainer/build.sh
+        id: cmkpkg
+      - name: Upload MKP artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ steps.cmkpkg.outputs.pkgfile }}
+          path: ${{ steps.cmkpkg.outputs.pkgfile }}
