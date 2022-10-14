@@ -1,36 +1,36 @@
-// For format details, see https://aka.ms/devcontainer.json. For config options, see the README at:
-// https://github.com/microsoft/vscode-dev-containers/tree/v0.155.1/containers/ubuntu
 {
-	"name": "Checkmk",
-	"build": {
-		"dockerfile": "Dockerfile",
-		// Update 'VARIANT' to pick an Ubuntu version: focal, bionic
-		"args": {
-			"VARIANT": "2.1.0-latest"
-		}
-	},
-	// Set *default* container specific settings.json values on container create.
-	"settings": {
-		"terminal.integrated.shell.linux": "/bin/bash"
-	},
-	// Add the IDs of extensions you want installed when the container is created.
-	"extensions": [
-		"ms-python.python",
-		"littlefoxteam.vscode-python-test-adapter"
-	],
-	// Use 'forwardPorts' to make a list of ports inside the container available locally.
-	"forwardPorts": [
-		5000
-	],
-	// Use 'postCreateCommand' to run commands after the container is created.
-	"postCreateCommand": ".devcontainer/symlink.sh",
-	// Comment out connect as root instead. More info: https://aka.ms/vscode-remote/containers/non-root.
-	"remoteUser": "cmk",
-	"remoteEnv": {
-		"PATH": "${containerEnv:PATH}:/omd/sites/cmk/bin:/omd/sites/cmk/local/lib/python3/bin/",
-		"OMD_ROOT": "/omd/sites/cmk",
-		"OMD_SITE": "cmk",
-		"CMK_SITE_ID": "cmk",
-		"WORKSPACE": "${containerWorkspaceFolder}"
-	}
+  "name": "checkmk_gematik_tikonn-devc",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "args": {
+      "VARIANT": "2.1.0p11"
+    }
+  },
+  "containerEnv": {
+    "CMK_SITE_ID": "cmk",
+    "CMK_PASSWORD": "cmk"
+  },
+  "appPort": 5000,
+  "settings": {
+    "terminal.integrated.shell.linux": "/bin/bash",
+    "extensions.autoUpdate": false,
+    "python.pythonPath": "/omd/sites/cmk/bin/python3"
+  },
+  "extensions": [
+    "ms-python.python",
+    "littlefoxteam.vscode-python-test-adapter",
+    "jeremyfa.tasks-chooser"
+  ],
+  "forwardPorts": [
+    9999
+  ],
+  "postCreateCommand": ".devcontainer/postCreateCommand.sh",
+  "remoteUser": "cmk",
+  "remoteEnv": {
+    "PATH": "/omd/sites/cmk/bin:/omd/sites/cmk/local/lib/python3/bin/:${containerEnv:PATH}",
+    "OMD_ROOT": "/omd/sites/cmk",
+    "OMD_SITE": "cmkX",
+    "CMK_SITE_ID": "cmkX",
+    "WORKSPACE": "${containerWorkspaceFolder}"
+  }
 }

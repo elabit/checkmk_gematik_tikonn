@@ -1,0 +1,9 @@
+{
+	"forwardPorts": [
+		9999
+	],
+	"remoteEnv": {
+		"OMD_SITE": "cmkX",
+		"CMK_SITE_ID": "cmkX"
+	}
+}

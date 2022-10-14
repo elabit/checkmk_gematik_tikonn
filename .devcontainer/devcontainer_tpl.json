@@ -3,9 +3,8 @@
 	"build": {
 		"dockerfile": "Dockerfile",
 		"args": {
-			// gets replaced by envsubst, Ref LeP3qq
 			"VARIANT": "$VERSION"
-		},
+		}
 	},
 	"containerEnv": {
 		"CMK_SITE_ID": "cmk",
@@ -14,7 +13,6 @@
 	"appPort": 5000,
 	"settings": {
 		"terminal.integrated.shell.linux": "/bin/bash",
-		// Update any extensions in Docker, how dare you 
 		"extensions.autoUpdate": false,
 		"python.pythonPath": "/omd/sites/cmk/bin/python3"
 	},

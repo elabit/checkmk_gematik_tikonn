@@ -23,3 +23,7 @@ CMD="${CMD} --filter='exclude *' ${TEMPDIR}/checkmk_template/ $(pwd)/"
 bash -c "$CMD"
 
 echo $CMD
+
+PROJECT_DIR="$(dirname $(folder_of $0))"
+PROJECT=${PROJECT_DIR##*/} 
+echo "export PROJECT_NAME=$PROJECT" > $PROJECT_DIR/.devcontainer/project.env

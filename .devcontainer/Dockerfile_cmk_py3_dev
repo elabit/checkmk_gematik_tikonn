@@ -14,9 +14,10 @@ RUN cd /tmp && wget https://www.python.org/ftp/python/3.9.4/Python-3.9.4.tgz \
     && make build_all \
     && make install
 
-# install python modules to run the Robotmk plugin in this container 
-ADD requirements.txt /tmp/requirements.txt
-RUN pip3 install -r /tmp/requirements.txt
 
 RUN export DEBIAN_FRONTEND=noninteractive \
     && apt-get -y install --no-install-recommends jq tree htop vim git telnet file less tmux
+
+# install default python modules 
+ADD .devcontainer/requirements.txt /tmp/requirements.txt
+RUN pip3 install -r /tmp/requirements.txt
