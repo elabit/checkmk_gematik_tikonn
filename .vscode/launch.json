@@ -32,5 +32,13 @@
                 "kocobox"
             ]
         },
+        {
+            "type": "bashdb",
+            "request": "launch",
+            "name": "Bash-Debug (hardcoded script name)",
+            "cwd": "${workspaceFolder}",
+            "program": "${workspaceFolder}/.devcontainer/template-update.sh",
+            "args": []
+        }
     ]
 }

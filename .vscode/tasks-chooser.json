@@ -1,0 +1,43 @@
+{
+    "selectDescription": "Select build setting",
+    "items": [
+        {
+            "displayName": "▶︎ Build MKP",
+            "description": "Build MKP Package for Checkmk",
+            "command": ".devcontainer/build.sh",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "displayName": "💿 Build all devcontainer images",
+            "command": "bash .devcontainer/devcontainer-build.sh"
+        },
+        {
+            "displayName": "♼ CMK: Reload Apache",
+            "command": "omd reload apache"
+        },
+        {
+            "displayName": "♽ CMK: Restart Apache",
+            "command": "omd restart apache"
+        },
+        {
+            "displayName": "♼ CMK: Reload CMK Core",
+            "command": "cmk -O"
+        },
+        {
+            "displayName": "♽ CMK: Restart CMK Core",
+            "command": "cmk -R"
+        },
+        {
+            "displayName": "👓 CMK: Inventory and reload",
+            "command": "cmk -IIv localhost && cmk -R"
+        }
+    ],
+    "baseItem": {
+        "version": "2.0.0",
+        "type": "shell",
+        "problemMatcher": []
+    }
+}

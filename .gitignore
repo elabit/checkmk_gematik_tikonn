@@ -1,3 +1,4 @@
-.swp
-*.pyc
-*.swp
+*.mkp
+.coverage
+__pycache__
+debug.log

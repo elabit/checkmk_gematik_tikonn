@@ -1,0 +1,28 @@
+{
+    'author': u'Marius Rieder <marius.rieder@scs.ch>',
+    'description': u'Checks for Dell EqualLogic',
+    'download_url': 'https://github.com/jiuka/checkmk_dell_eql/releases',
+    'files': {
+        'agent_based': [
+            'dell_eql_disk.py',
+            'dell_eql_fan.py',
+            'dell_eql_member.py',
+            'dell_eql_temp.py',
+            'dell_eql_volume.py',
+        ],
+        'agents': [],
+        'checkman': [],
+        'checks': [],
+        'doc': [],
+        'inventory': [],
+        'notifications': [],
+        'pnp-templates': [],
+        'web': []
+    },
+    'name': 'dell_eql',
+    'title': u'Checks for Dell EqualLogic',
+    'version': '1.0',
+    'version.min_required': '2.0.0b6',
+    'version.packaged': '2.0.0',
+    'version.usable_until': '2.1.0'
+}
