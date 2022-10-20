@@ -39,7 +39,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           # name: ${{ steps.cmkpkg.outputs.artifactname }}
-          name: mkp
+          name: ${{ steps.cmkpkg.outputs.pkgfile }}
           path: ${{ steps.cmkpkg.outputs.pkgfile }}
 
   # ////////////////////////////////////////////////////////////////////////
@@ -59,11 +59,10 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           # download dir
-          name: mkp
-          path: package
+          path: mkp
 
       - name: Debug - Show downloaded content
-        run: ls -la package/*
+        run: ls -la mkp/*
       - name: Show ref
         run: echo ${GITHUB_REF##*/}
       - name: Download chag tool
@@ -94,6 +93,6 @@ jobs:
 
       # -m "" means: Leave the Release mesage body as it is, do not modify
       - name: Add Release Assets
-        run: hub release edit $(find package/ -type f -name "*.mkp" -printf "-a %p ") -m "" "${GITHUB_REF#refs/*/}"
+        run: hub release edit $(find mkp/ -type f -name "*.mkp" -printf "-a %p ") -m "" "${GITHUB_REF#refs/*/}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
