@@ -40,7 +40,8 @@ export PKGVERSION=$(git describe --exact-match --tags 2> /dev/null || git rev-pa
 echo "---------------------------------------------"
 echo "▹ Merging package version '$PKGVERSION' into $PKGFILE ..."
 cat $PKGFILE.tmp | jq '. + {version:env.PKGVERSION}' > $PKGFILE
-
+echo "Package file content AFTER:"
+cat $PKGFILE
 
 echo "---------------------------------------------"
 echo "▹ Building MKP '$PKGNAME' (packagefile: $PKGFILE) ..."
