@@ -8,6 +8,12 @@ cleanup() {
 }
 trap cleanup EXIT
 
+
+function folder_of() {
+  DIR="${1%/*}"
+  (cd "$DIR" && echo "$(pwd -P)")
+}
+
 git -C $TEMPDIR clone https://github.com/simonmeggle/checkmk_template.git
 
 CMD="rsync --archive --cvs-exclude --no-owner --no-group --no-times --verbose"
@@ -24,6 +30,11 @@ bash -c "$CMD"
 
 echo $CMD
 
+echo "Creating default directories..."
+for DIR in "agent_based" "agents" "bakery" "checkman" "checks" "checkman" "images" "web"; do
+  mkdir -p $(pwd)/$DIR
+done
+
 PROJECT_DIR="$(dirname $(folder_of $0))"
 PROJECT=${PROJECT_DIR##*/} 
-echo "export PROJECT_NAME=$PROJECT" > $PROJECT_DIR/.devcontainer/project.env
+echo "export PROJECT_NAME=$PROJECT" > $PROJECT_DIR/project.env

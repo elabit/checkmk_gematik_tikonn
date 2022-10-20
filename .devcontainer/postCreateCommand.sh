@@ -7,7 +7,9 @@ echo "▹ WORKSPACE: $WORKSPACE"
 # This step ties the workspace files with the Devcontainer. lsyncd is used to synchronize files. 
 echo "▹ Linking the project files into the container (linkfiles.sh)..."
 # TODO: omit robotmk
-/workspaces/robotmk/.devcontainer/linkfiles.sh
+
+source $WORKSPACE/project.env
+$WORKSPACE/.devcontainer/linkfiles.sh
 
 # Tell bash to load aliases and functions
 echo "▹ Loading aliases and functions..."
@@ -41,13 +43,16 @@ echo "▹ Enabling the Web API..."
 sed -i '/disable_web_api/d' $OMD_ROOT/etc/check_mk/multisite.d/wato/global.mk
 echo "disable_web_api = False" >> $OMD_ROOT/etc/check_mk/multisite.d/wato/global.mk
 
-echo "▹ Installing Python modules for Robotmk... "
-pip3 install -r /workspaces/robotmk/requirements.txt
+# Install project specific python modules on container startup.
+# For large dependencies, better use the Dockerfile which builds an individual image. 
+# Ref 6TEtDq
+echo "▹ Installing Python modules for $PROJECT_NAME... "
+pip3 install -r $WORKSPACE/requirements.txt
 
 echo "▹ Starting OMD... "
 omd restart
 
 echo "▹ Creating localhost via Web API..."
-/workspaces/robotmk/.devcontainer/create_dummyhost.sh
+$WORKSPACE/.devcontainer/create_dummyhost.sh
 
 echo "✅ postCreateCommand.sh finished."

@@ -3,9 +3,9 @@ name: build
 on:
   push:
     branches:
-    - '**'
+      - "**"
     tags-ignore:
-    - 'v*'
+      - "v*"
   pull_request:
 
 jobs:
@@ -26,7 +26,7 @@ jobs:
         run: /docker-entrypoint.sh /bin/true
       - uses: actions/checkout@v2
       - name: Setup links
-        run: .devcontainer/symlink.sh
+        run: .devcontainer/linkfiles.sh
       - name: Update GITHUB_PATH
         run: echo "/omd/sites/cmk/bin" >> $GITHUB_PATH
       - name: Build Extension

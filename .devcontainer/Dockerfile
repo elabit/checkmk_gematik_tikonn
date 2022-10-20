@@ -1,21 +1,24 @@
-# See here for image contents: https://github.com/microsoft/vscode-dev-containers/tree/v0.155.1/containers/ubuntu/.devcontainer/base.Dockerfile
-
 ARG VARIANT
-# Build the dev images with .devcontainer/build-devcontainer.sh !
-# See https://stackoverflow.com/a/69798220 to run the image on Apple M1
+# This Dockerfile is the basis for the VS Code devcontainer. It is based on the cmk-python3-dev image.
+# NOTE: First build the "cmk-python3-dev" image(s) with .devcontainer/devcontainer_img_build.sh !
+
+# Platform is important to also run this container on Apple M1, see https://stackoverflow.com/a/69798220
 FROM --platform=linux/amd64 cmk-python3-dev:${VARIANT}
 
-ENV CMK_PASSWORD="cmk"
+# In most cases, you won't need to add anything here so that the project specific images created 
+# from this are all identical. 
+# But for the case you need to install some special binaries etc. you can add them here.
+# They will be available only in the project specific image then.
 
-# Creates the OMD site, executes post-start hook and halts before site start
+# The entrypoint creates the OMD site, executes post-start hook and halts before site start.
+# Customization option 1) Add your own scripts to the post-create folder (1 layer result)
 COPY docker-entrypoint.d /docker-entrypoint.d
 RUN /docker-entrypoint.sh /bin/true
 
-# make the agent dir writeable from the CMK site (to link RF example tests) 
-RUN chgrp -R cmk /usr/lib/check_mk_agent && chmod g+w /usr/lib/check_mk_agent
-
-COPY .root_bash_aliases /root/.bash_aliases
-RUN echo ". /root/.bash_aliases" >> /root/.bashrc
-COPY .tmux.conf /root/.tmux.conf
+# Customization option 2) Install your own stuff here if you prefer single Docker layers
+# Project dependencies can also be installed in postCreateCommend.sh (using the default Docker image)
+# see Ref #6TEtDq
+# ADD YOUR CUSTOMIZATION HERE
+# ...
 
 ENTRYPOINT ["/bin/bash"]

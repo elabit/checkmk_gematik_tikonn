@@ -1,9 +1,10 @@
 flake8
+ipdb
+mergedeep
 pytest
 pytest-cov
+pylint
+pyyaml
+python-dateutil
 requests-mock
 robotframework
-pyyaml
-mergedeep
-python-dateutil
-ipdb
