@@ -60,8 +60,7 @@ jobs:
         with:
           # download dir
           name: mkp
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
+          path: package
 
       - name: Debug - Show downloaded content
         run: ls -la package/*
@@ -78,6 +77,8 @@ jobs:
         id: tag
         run: echo ::set-output name=VERSION::${GITHUB_REF##*/}
 
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
       # The Release text will be taken from the annotated tag, created with "chag"
       - name: Create Release
         id: create_release
