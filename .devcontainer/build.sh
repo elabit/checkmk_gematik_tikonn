@@ -25,8 +25,7 @@ set -u
 source $WORKSPACE/project.env
 # checkmk_my_check -> my_check
 CHECK_NAME=${PROJECT_NAME#*_}
-rm /omd/sites/cmk/var/check_mk/packages/* 2>&1 > /dev/null
-PKGFILE=/omd/sites/cmk/var/check_mk/packages/$CHECK_NAME
+PKGFILE=$OMD_ROOT/var/check_mk/packages/package
 cp -f $WORKSPACE/package $PKGFILE.tmp
 PKGNAME=$(jq -r '.name' $PKGFILE.tmp)
 
