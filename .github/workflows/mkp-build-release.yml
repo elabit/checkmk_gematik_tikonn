@@ -10,7 +10,7 @@ on:
 jobs:
   # ////////////////////////////////////////////////////////////////////////
 
-  build-release:
+  build:
     name: Build MKP
     runs-on: ubuntu-latest
     container:
@@ -48,7 +48,7 @@ jobs:
     name: Release MKP
     runs-on: ubuntu-latest
     needs:
-      - build-release
+      - build
     env:
       WORKSPACE: ${{ github.workspace }}
     steps:
@@ -76,9 +76,9 @@ jobs:
         id: tag
         run: echo ::set-output name=VERSION::${GITHUB_REF##*/}
 
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
-      # The Release text will be taken from the annotated tag, created with "chag"
+      # - name: Setup tmate session
+      #   uses: mxschmitt/action-tmate@v3
+      # The Release text will be taken from the annotated tag, created with "chag", see Ref xBCjym
       - name: Create Release
         id: create_release
         uses: softprops/action-gh-release@v1

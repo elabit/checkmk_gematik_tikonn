@@ -12,7 +12,7 @@ on:
 jobs:
   # ////////////////////////////////////////////////////////////////////////
 
-  build-release:
+  build:
     name: Build MKP
     runs-on: ubuntu-latest
     container:
