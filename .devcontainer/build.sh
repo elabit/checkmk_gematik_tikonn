@@ -26,7 +26,7 @@ set -u
 source $WORKSPACE/project.env
 # checkmk_my_check -> my_check
 CHECK_NAME=${PROJECT_NAME#*_}
-PKGFILE=$OMD_ROOT/var/check_mk/packages/package
+PKGFILE=$OMD_ROOT/var/check_mk/packages/$CHECK_NAME
 
 
 echo "Copying $WORKSPACE/package to $PKGFILE.tmp ..."
