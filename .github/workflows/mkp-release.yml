@@ -23,7 +23,7 @@ jobs:
 
     steps:
       - name: Install jq package
-        run: apt update && apt-get -y install jq
+        run: apt update && apt-get -y install jq tree
       - name: Create Checkmk Site
         run: /docker-entrypoint.sh /bin/true
       - name: Checkout project repository

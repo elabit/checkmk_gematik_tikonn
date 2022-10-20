@@ -18,6 +18,7 @@ if [ -z $OMD_SITE ]; then
     echo "ERROR: You do not seem to be on a OMD site (variable OMD_SITE not set). Exiting."
     exit 1
 fi 
+echo "Starting MKP build script"
 
 set -u 
 # set -x 
@@ -28,11 +29,10 @@ CHECK_NAME=${PROJECT_NAME#*_}
 PKGFILE=$OMD_ROOT/var/check_mk/packages/package
 
 
-PKGNAME=$(jq -r '.name' $PKGFILE.tmp)
-
-echo "Starting MKP build script"
 echo "Copying $WORKSPACE/package to $PKGFILE.tmp ..."
 cp -f $WORKSPACE/package $PKGFILE.tmp
+PKGNAME=$(jq -r '.name' $PKGFILE.tmp)
+
 echo "Package file content:"
 cat $PKGFILE.tmp
 # get the current tag (if Release) or commit hash...
