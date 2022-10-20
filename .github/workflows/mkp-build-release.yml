@@ -2,9 +2,10 @@ name: MKP-Build-Release
 
 on:
   push:
+    branches:
+      - "main"
     tags:
       - "v*"
-      - "!v*[a-z]"
   workflow_dispatch:
 
 jobs:

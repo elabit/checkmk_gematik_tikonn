@@ -2,11 +2,12 @@ name: MKP-Build
 
 on:
   push:
-    branches:
-      - "**"
+    branches-ignore:
+      - "main"
     tags-ignore:
       - "v*"
-  pull_request:
+
+  # pull_request:
   workflow_dispatch:
 
 jobs:
