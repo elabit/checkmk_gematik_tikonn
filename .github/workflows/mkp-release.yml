@@ -57,14 +57,10 @@ jobs:
       - name: Download MKP artifact
         uses: actions/download-artifact@v3
         with:
-          with: myfoo
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
-      - name: Download MKP artifact
-        uses: actions/download-artifact@v3
-        with:
           # download dir
           path: package
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
 
       - name: Debug - Show downloaded content
         run: ls -la package/*
