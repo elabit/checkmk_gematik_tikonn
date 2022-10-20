@@ -31,7 +31,7 @@ PKGNAME=$(jq -r '.name' $PKGFILE.tmp)
 
 echo "Starting MKP build script"
 
-# get the current tag (if Release) or commit hash
+# get the current tag (if Release) or commit hash...
 export PKGVERSION=$(git describe --exact-match --tags 2> /dev/null || git rev-parse --short HEAD)
 echo "---------------------------------------------"
 echo "▹ Merging package version '$PKGVERSION' into $PKGFILE ..."
