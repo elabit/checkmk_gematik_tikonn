@@ -4,9 +4,9 @@ name: MKP-Release
 #   push:
 #     tags:
 #       - "v*"
-on: 
+on:
   workflow_dispatch:
-  
+
 jobs:
   # ////////////////////////////////////////////////////////////////////////
 
@@ -40,6 +40,7 @@ jobs:
           path: ${{ steps.cmkpkg.outputs.pkgfile }}
 
   # ////////////////////////////////////////////////////////////////////////
+
   # https://docs.github.com/en/actions/guides/storing-workflow-data-as-artifacts#downloading-or-deleting-artifacts
   release:
     name: Release MKP
