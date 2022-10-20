@@ -1,28 +1,18 @@
 {
-    'author': u'Marius Rieder <marius.rieder@scs.ch>',
-    'description': u'Checks for Dell EqualLogic',
-    'download_url': 'https://github.com/jiuka/checkmk_dell_eql/releases',
-    'files': {
-        'agent_based': [
-            'dell_eql_disk.py',
-            'dell_eql_fan.py',
-            'dell_eql_member.py',
-            'dell_eql_temp.py',
-            'dell_eql_volume.py',
-        ],
-        'agents': [],
-        'checkman': [],
-        'checks': [],
-        'doc': [],
-        'inventory': [],
-        'notifications': [],
-        'pnp-templates': [],
-        'web': []
+    "title": "Gematik TI-Konnektoren",
+    "name": "gematik_tikonn",
+    "description": "Special Agent für TI-Konnektoren (=Hardwarekomponenten, welche die IT von Arztpraxen, Apotheken, Kliniken usw. über ein Transportnetz mit der sog. Telematikinfrastruktur verbinden). Die 'Nationale Agentur für Digitale Medizin' (gematik) trägt die Gesamtverantwortung für diese Infrastruktur und definiert die Standards für die Dienste.",
+    "author": "Simon Meggle <simon.meggle@elabit.de>",
+    "download_url": "https://github.com/elabit/gemtaik-tikonn/releases",
+    "files": {
+        "agent_based": ["gematik_tikonn.py"],
+        "agents": ["special/agent_gematik_tikonn"],
+        "checks": ["agent_gematik_tikonn"],
+        "web": [
+            "plugins/wato/check_parameters_gematik_tikonn.py",
+            "plugins/wato/datasource_gematik_tikonn.py",
+            "plugins/wato/discovery_gematik_tikonn.py"
+        ]
     },
-    'name': 'dell_eql',
-    'title': u'Checks for Dell EqualLogic',
-    'version': '1.0',
-    'version.min_required': '2.0.0b6',
-    'version.packaged': '2.0.0',
-    'version.usable_until': '2.1.0'
+    "version.min_required": "2.0.0"
 }

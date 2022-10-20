@@ -1,7 +1,7 @@
 {
     "displayName": "▶︎ Build MKP",
     "description": "Build MKP Package for Checkmk",
-    "command": ".devcontainer/build.sh",
+    "command": "bash .devcontainer/build.sh",
     "group": {
         "kind": "build",
         "isDefault": true

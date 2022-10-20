@@ -1,10 +1,10 @@
 name: build-release
 
 on:
-  push:
-    tags:
-      - "v*"
-      - "!v*[a-z]"
+  # push:
+  #   tags:
+  #     - "v*"
+  #     - "!v*[a-z]"
 
 jobs:
   build-release:
