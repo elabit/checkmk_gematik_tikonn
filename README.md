@@ -2,32 +2,6 @@
 
 START HERE 👉 https://forms.gle/13fGKvo98pCev1Cs9
 
-<!--ts-->
-* [Checkmk Monitoring für Gematik TI-Konnektoren](#checkmk-monitoring-für-gematik-ti-konnektoren)
-   * [Beschreibung](#beschreibung)
-   * [Features](#features)
-   * [DISCLAIMER](#disclaimer)
-   * [Tester gesucht! <g-emoji class="g-emoji" alias="man_scientist" fallback-src="https://github.githubassets.com/images/icons/emoji/unicode/1f468-1f52c.png">👨‍🔬</g-emoji>](#tester-gesucht-)
-   * [DEVELOPMENT](#development)
-   * [Voraussetzungen und Installation](#voraussetzungen-und-installation)
-      * [Python-Modul "zeep"](#python-modul-zeep)
-      * [WSDL](#wsdl)
-      * [Installation des MKPs](#installation-des-mkps)
-   * [Betrieb](#betrieb)
-      * [Datasource-Regel](#datasource-regel)
-      * [Discovery-Regel](#discovery-regel)
-      * [Logs / Events](#logs--events)
-      * [DCD / Kartenterminals](#dcd--kartenterminals)
-   * [Glossar](#glossar)
-   * [Weiterführende Informationen](#weiterführende-informationen)
-      * [Hersteller](#hersteller)
-      * [Dokumente](#dokumente)
-   * [CREDITS](#credits)
-
-<!-- Created by https://github.com/ekalinin/github-markdown-toc -->
-<!-- Added by: runner, at: Thu Oct 20 21:23:06 UTC 2022 -->
-
-<!--te-->
 
 ## Beschreibung 
 
@@ -36,6 +10,13 @@ Mit diesem Checkmk-Special-Agent können [Gematik](https://gematik.de)-kompatibl
 ![](img/tikonn.png)
 
 Der Agent wurde vom [Krankenhaus des Landkreises Weilheim-Schongau](https://www.meinkrankenhaus2030.de) in Auftrag gegeben und unter der GPLv3 veröffentlicht. Verantwortlich für die Entwicklung ist die [ELABIT GmbH](https://elabit.de).
+
+## Inhalt 
+
+<!--ts-->
+
+<!--te-->
+
 
 ## Features
 
