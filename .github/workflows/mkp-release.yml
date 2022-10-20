@@ -38,7 +38,8 @@ jobs:
       - name: Upload MKP artifact
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ steps.cmkpkg.outputs.artifactname }}
+          # name: ${{ steps.cmkpkg.outputs.artifactname }}
+          name: mkp
           path: ${{ steps.cmkpkg.outputs.pkgfile }}
 
   # ////////////////////////////////////////////////////////////////////////
@@ -58,7 +59,7 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           # download dir
-          path: package
+          name: mkp
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
 

@@ -61,8 +61,7 @@ if [ -n "${GITHUB_WORKSPACE-}" ]; then
     echo "🐙 ...Github Workflow exists."
     echo "▹ Set Outputs for GitHub Workflow steps"
     echo "::set-output name=pkgfile::$NEWFILENAME"
-    VERSION=$(jq -r '.version' $PKGFILE)
-    echo "::set-output name=artifactname::$NEWFILENAME"
+    # echo "::set-output name=artifactname::$NEWFILENAME"
 else 
     echo "...no GitHub Workflow detected (local execution)."
 fi
