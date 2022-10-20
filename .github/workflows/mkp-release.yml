@@ -23,7 +23,7 @@ jobs:
       - name: Create Checkmk Site
         run: /docker-entrypoint.sh /bin/true
       - name: Checkout project repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Link repository files into container
         run: .devcontainer/linkfiles.sh
       - name: Update GITHUB_PATH
@@ -49,7 +49,7 @@ jobs:
       WORKSPACE: ${{ github.workspace }}
     steps:
       - name: Checkout project repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Download MKP artifact
         uses: actions/download-artifact@v2
         with:
