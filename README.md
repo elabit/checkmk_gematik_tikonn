@@ -1,7 +1,6 @@
 # Checkmk Monitoring für Gematik TI-Konnektoren
 
-START HERE 👉 https://forms.gle/13fGKvo98pCev1Cs9
-
+Bitte zuerst lesen 👉 https://forms.gle/13fGKvo98pCev1Cs9
 
 ## Beschreibung 
 
