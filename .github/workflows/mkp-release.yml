@@ -22,6 +22,8 @@ jobs:
       WORKSPACE: ${{ github.workspace }}
 
     steps:
+      - name: Install jq package
+        run: apt update && apt-get -y install jq
       - name: Create Checkmk Site
         run: /docker-entrypoint.sh /bin/true
       - name: Checkout project repository
