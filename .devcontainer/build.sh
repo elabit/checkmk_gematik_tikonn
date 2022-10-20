@@ -33,8 +33,8 @@ echo "Copying $WORKSPACE/package to $PKGFILE.tmp ..."
 cp -f $WORKSPACE/package $PKGFILE.tmp
 PKGNAME=$(jq -r '.name' $PKGFILE.tmp)
 
-echo "Package file content:"
-cat $PKGFILE.tmp
+# echo "Package file content:"
+# cat $PKGFILE.tmp
 # get the current tag (if Release) or commit hash...
 export PKGVERSION=$(git describe --exact-match --tags 2> /dev/null || git rev-parse --short HEAD)
 echo "---------------------------------------------"
