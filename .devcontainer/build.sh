@@ -26,11 +26,15 @@ source $WORKSPACE/project.env
 # checkmk_my_check -> my_check
 CHECK_NAME=${PROJECT_NAME#*_}
 PKGFILE=$OMD_ROOT/var/check_mk/packages/package
-cp -f $WORKSPACE/package $PKGFILE.tmp
+
+
 PKGNAME=$(jq -r '.name' $PKGFILE.tmp)
 
 echo "Starting MKP build script"
-
+echo "Copying $WORKSPACE/package to $PKGFILE.tmp ..."
+cp -f $WORKSPACE/package $PKGFILE.tmp
+echo "Package file content:"
+cat $PKGFILE.tmp
 # get the current tag (if Release) or commit hash...
 export PKGVERSION=$(git describe --exact-match --tags 2> /dev/null || git rev-parse --short HEAD)
 echo "---------------------------------------------"
