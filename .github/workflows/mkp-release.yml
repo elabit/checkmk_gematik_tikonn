@@ -36,7 +36,7 @@ jobs:
         run: .devcontainer/build.sh
         id: cmkpkg
       - name: Upload MKP artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: ${{ steps.cmkpkg.outputs.artifactname }}
           path: ${{ steps.cmkpkg.outputs.pkgfile }}
@@ -55,10 +55,17 @@ jobs:
       - name: Checkout project repository
         uses: actions/checkout@v3
       - name: Download MKP artifact
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
+        with:
+          with: myfoo
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+      - name: Download MKP artifact
+        uses: actions/download-artifact@v3
         with:
           # download dir
           path: package
+
       - name: Debug - Show downloaded content
         run: ls -la package/*
       - name: Show ref
