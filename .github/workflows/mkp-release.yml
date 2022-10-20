@@ -58,6 +58,7 @@ jobs:
       - name: Download MKP artifact
         uses: actions/download-artifact@v3
         with:
+          name: ${{ steps.cmkpkg.outputs.pkgfile }}
           # download dir
           path: mkp
 
