@@ -228,7 +228,7 @@ Auf Wunsch kann der [DCD](https://docs.checkmk.com/latest/de/dcd.html) eingesetz
     - v2.3.24
 - Gematik 
   - Konnektor-info allgemein: https://fachportal.gematik.de/hersteller-anbieter/komponenten-dienste/konnektor
-  - Spezifikation Konnektor: https://www.ina.gematik.de/standard/formhandler/324/gemSpec_Kon_V5_8_0.pdf
+  - Spezifikation Konnektor: https://fachportal.gematik.de/fachportal-import/files/gemSpec_Kon_V5.9.5.pdf
   - Implementierungsleitfaden: https://fachportal.gematik.de/fachportal-import/files/gemILF_PS_V2.14.0.pdf
   - Forum: https://fachportal.gematik.de
   - Telematik Github Repo der Gematik: https://github.com/gematik/api-telematik

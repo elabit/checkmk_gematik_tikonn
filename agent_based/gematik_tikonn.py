@@ -61,9 +61,10 @@ def check_gematik_tikonn(item, params, section):
             LOCAL_TZ
         )
         vpn_connected_time_str = vpn_connected_time.strftime("%H:%M Uhr (%d.%m.%Y)")
+        # Siehe Spezifikation, TAB_KON_568
         yield Result(
             state=vpn_status,
-            summary="{} ist {} - Letzte Verbindung: {}".format(
+            summary="{} ist {} - Letzte Statusänderung: {}".format(
                 item, vpn["ConnectionStatus"], vpn_connected_time_str
             ),
         )
