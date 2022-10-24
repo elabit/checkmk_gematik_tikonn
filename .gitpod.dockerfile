@@ -1,6 +1,7 @@
 ARG VARIANT
 FROM checkmk/check-mk-free:2.1.0p11
 
+USER root
 # This Dockerfile is based on the official Checkmk Dockerfile (Free Edition)
 # and adds some additional features for development: 
 # - Python 3.9.4
@@ -46,7 +47,7 @@ RUN echo ". /root/.bash_aliases" >> /root/.bashrc
 # tmux configuration inside container
 COPY .devcontainer/.tmux.conf /root/.tmux.conf
 
-COPY .devcontainer/docker-entrypoint.d /docker-entrypoint.d
-RUN /docker-entrypoint.sh /bin/true
+# COPY .devcontainer/docker-entrypoint.d /docker-entrypoint.d
+# RUN /docker-entrypoint.sh /bin/true
 
-ENTRYPOINT ["tail", "-f", "/dev/null"]
+USER gitpod
