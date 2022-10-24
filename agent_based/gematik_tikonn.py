@@ -90,7 +90,7 @@ register.check_plugin(
     service_name="TI-Konnektor %s",
     discovery_function=discovery_gematik_tikonn,
     # Default: TI=ja, SIS=nein
-    discovery_default_parameters={"vpn": (True, False)},
+    discovery_default_parameters={"vpn": (True, False), "peripherie": (True, True)},
     discovery_ruleset_name="discovery_gematik_tikonn",
     check_function=check_gematik_tikonn,
     # check_ruleset_name="check_params_gematik_tikonn",
