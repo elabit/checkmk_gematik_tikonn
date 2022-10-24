@@ -15,7 +15,12 @@ from cmk.gui.valuespec import (
     DropdownChoice,
     Tuple,
     ListOfStrings,
+    FixedValue,
+    Transform,
+    Alternative,
 )
+
+from cmk.gui.log import logger
 
 # FIXME: Dokumentation versch. Rulespecs!
 from cmk.gui.plugins.wato.datasource_programs import (
@@ -25,6 +30,18 @@ from cmk.gui.plugins.wato.datasource_programs import (
 # TODO: Aufräiumen
 # def _item_valuespec_foobar():
 #    return TextAscii(title=_("Sector name"))
+
+
+def forth(data):
+    if not "verify_ssl" in data:
+        # logger.critical("BEFORE: " + str(data))
+        data["verify_ssl"] = True
+        # logger.critical("AFTER: " + str(data))
+    return data
+
+
+def _transform_valuespec_special_agents_gematik_tikonn():
+    return Transform(_valuespec_special_agents_gematik_tikonn(), forth=forth)
 
 
 def _valuespec_special_agents_gematik_tikonn():
@@ -43,6 +60,21 @@ Telematikinfrastruktur."""
                     help=_("Netzwerkport des Konnektors"),
                     default_value=80,
                 ),
+            ),
+            (
+                "verify_ssl",
+                # Transform(
+                Alternative(
+                    title=_("Gültigkeit des SSL-Zertifikats"),
+                    default_value=True,
+                    elements=[
+                        FixedValue(True, title=_("überprüfen"), totext=""),
+                        FixedValue(False, title=_("nicht überprüfen"), totext=""),
+                    ],
+                ),
+                # forth=lambda v: v if isinstance(v, dict) else {""}),
+                #    forth=forth,
+                # ),
             ),
             (
                 "wsdl_versions",
@@ -121,7 +153,7 @@ rulespec_registry.register(
         HostRulespec(
             group=RulespecGroupDatasourceProgramsHardware,
             name="special_agents:gematik_tikonn",
-            valuespec=_valuespec_special_agents_gematik_tikonn,
+            valuespec=_transform_valuespec_special_agents_gematik_tikonn,
         )
     )
 )

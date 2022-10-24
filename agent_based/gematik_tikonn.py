@@ -61,9 +61,10 @@ def check_gematik_tikonn(item, params, section):
             LOCAL_TZ
         )
         vpn_connected_time_str = vpn_connected_time.strftime("%H:%M Uhr (%d.%m.%Y)")
+        # Siehe Spezifikation, TAB_KON_568
         yield Result(
             state=vpn_status,
-            summary="{} ist {} - Letzte Verbindung: {}".format(
+            summary="{} ist {} - Letzte Statusänderung: {}".format(
                 item, vpn["ConnectionStatus"], vpn_connected_time_str
             ),
         )
@@ -89,7 +90,7 @@ register.check_plugin(
     service_name="TI-Konnektor %s",
     discovery_function=discovery_gematik_tikonn,
     # Default: TI=ja, SIS=nein
-    discovery_default_parameters={"vpn": (True, False)},
+    discovery_default_parameters={"vpn": (True, False), "peripherie": (True, True)},
     discovery_ruleset_name="discovery_gematik_tikonn",
     check_function=check_gematik_tikonn,
     # check_ruleset_name="check_params_gematik_tikonn",

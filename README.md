@@ -1,5 +1,7 @@
 # Checkmk Monitoring für Gematik TI-Konnektoren
 
+[![MKP-Build](https://github.com/elabit/checkmk_gematik_tikonn/actions/workflows/mkp-build.yml/badge.svg)](https://github.com/elabit/checkmk_gematik_tikonn/actions/workflows/mkp-build.yml) [![MKP-Build-Release](https://github.com/elabit/checkmk_gematik_tikonn/actions/workflows/mkp-build-release.yml/badge.svg)](https://github.com/elabit/checkmk_gematik_tikonn/actions/workflows/mkp-build-release.yml) [![MD TOC](https://github.com/elabit/checkmk_gematik_tikonn/actions/workflows/md-toc.yml/badge.svg)](https://github.com/elabit/checkmk_gematik_tikonn/actions/workflows/md-toc.yml)
+
 Bitte zuerst lesen 👉 https://forms.gle/13fGKvo98pCev1Cs9
 
 ## Beschreibung 
@@ -36,7 +38,7 @@ Der Agent wurde vom [Krankenhaus des Landkreises Weilheim-Schongau](https://www.
    * [CREDITS](#credits)
 
 <!-- Created by https://github.com/ekalinin/github-markdown-toc -->
-<!-- Added by: runner, at: Thu Oct 20 21:27:40 UTC 2022 -->
+<!-- Added by: runner, at: Fri Oct 21 09:04:51 UTC 2022 -->
 
 <!--te-->
 
@@ -64,33 +66,25 @@ Der Agent wurde vom [Krankenhaus des Landkreises Weilheim-Schongau](https://www.
 
 ## Tester gesucht! 👨‍🔬
 
-Bis zum ersten stabilen Release sind noch folgende Fragen offen. Wer hat Zeit und Lust, diesen Check gegen Konnektoren in seiner (Test!)-Umgebung laufen zu lassen? 
+Installiere das MKP und lass den Special Agent gegen "Deine" Konnektoren laufen. 
 
-Zu klären ist unter anderem: 
+Es gibt mehrere Möglichkeiten, das Projekt zu unterstützen: 
 
-- Der Agent wurde gegen die Spezifikation der Gematik entwickelt, jedoch nur mit "kocobox"-Konnektoren getestet.  
-🙋‍♂️ **Funktioniert er auch mit Geräten von RISE und Secunet?**
-- Der Agent wurde im Code (und auch im Web-Setup) darauf vorbereitet, gleichzeitig mit verschiedenen WSDL-Versionen umgehen zu können.  
-🙋‍♂️ **Welche Versionen sind da draußen im Einsatz**? 
-- Je Konnektor werden auch die zugehörigen Kartenterminals (durch den DCD) angelegt.  
-🙋‍♂️ **Ist es hilfreich, auch die Kartenterminals im Monitoring zu haben? Aktuell wird nur ein informeller Check generiert - welche Checks könnten noch nützlich sein?**  (siehe Dump der Datenstruktur unten)
-🙋‍♂️ **Wie gelingt es, die Kartenterminals mit IP-Adresse anzulegen? (Das wird vom DCD nativ nicht unterstützt)**
-- Aktuell sind keine Tests implementiert. **Wer kann diese beisteuern?**
-- **Welche anderen Features bzw. Werte könnten noch implementiert werden?**
+- Grundsätzliche Fragen/Überlegungen/Feature Requests beisteuern: 
+  - per [Issue](https://github.com/elabit/checkmk_gematik_tikonn/issues) 
+  - per [Pull Request](https://github.com/elabit/checkmk_gematik_tikonn/pulls) direkt in [FRAGEN.md](./FRAGEN.md) aufnehmen
+- Dokumentation (README, Inline-Help, ...)
+- Coding (siehe [Development](#development))
 
 Für einen besseren Überblick über die Hersteller- und Versionsabdeckung bitte ich alle Tester, vorab das folgende Formular auszufüllen: 
 
 https://forms.gle/13fGKvo98pCev1Cs9
 
-Rückmeldungen jeglicher Art - Probleme, Bugs, Bugfixes, Feature Requests... - bitte ausschließlich über den Issue Tracker oder Pull Requests dieses Projekts. 
 
 Jede aktive Mithilfe, die das Projekt nach vorn bringt, wird mit einem **Robotmk-LED-Gyrotwister** (limitierte Auflage!) belohnt! 🚀 🎉
 
 ![](img/gtw.png)
 
-
-
-![](img/kt_data.png)
 
 
 ## DEVELOPMENT
@@ -115,6 +109,9 @@ Die Kommunikation mit der SOAP-Schnittstelle der Konnektoren erfolgt über das [
 ```bash
 OMD[testsite]:~$ python3 -m pip install zeep
 ```
+
+💡 Die Installation von Python-Modulen per `pip` ist analog auch in einer CMK-Appliance möglich (SSH-Zugriff vorausgesetzt).
+
 ### WSDL 
 
 Der Special Agent benötigt zur Kommunikation mit der SOAP-Schnittstelle ferner eine [WSDL-Servicebeschreibung](https://de.wikipedia.org/wiki/Web_Services_Description_Language).
@@ -231,7 +228,7 @@ Auf Wunsch kann der [DCD](https://docs.checkmk.com/latest/de/dcd.html) eingesetz
     - v2.3.24
 - Gematik 
   - Konnektor-info allgemein: https://fachportal.gematik.de/hersteller-anbieter/komponenten-dienste/konnektor
-  - Spezifikation Konnektor: https://www.ina.gematik.de/standard/formhandler/324/gemSpec_Kon_V5_8_0.pdf
+  - Spezifikation Konnektor: https://fachportal.gematik.de/fachportal-import/files/gemSpec_Kon_V5.9.5.pdf
   - Implementierungsleitfaden: https://fachportal.gematik.de/fachportal-import/files/gemILF_PS_V2.14.0.pdf
   - Forum: https://fachportal.gematik.de
   - Telematik Github Repo der Gematik: https://github.com/gematik/api-telematik
