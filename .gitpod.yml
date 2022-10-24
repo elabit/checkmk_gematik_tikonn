@@ -1,0 +1,30 @@
+image:
+  file: .gitpod.dockerfile
+
+#tasks:
+# - init: |
+#     python -m venv venv
+#     source venv/bin/activate
+#     pip install --upgrade pip wheel setuptools
+#     pip install Django
+#     python manage.py migrate
+# - command: |
+#     source venv/bin/activate
+#     python manage.py runserver
+
+ports:
+  - port: 8999
+    visibility: private
+    onOpen: open-preview
+
+vscode:
+  extensions:
+    - yzhang.markdown-all-in-one
+    - davidanson.vscode-markdownlint
+    - ms-python.python
+    - jeremyfa.tasks-chooser
+    - yzhang.markdown-all-in-one
+    - GitHub.copilot
+    - Gruntfuggly.todo-tree
+    - rogalmic.bash-debug
+    - almenon.arepl
