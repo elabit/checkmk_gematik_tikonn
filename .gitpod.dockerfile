@@ -48,3 +48,5 @@ COPY .devcontainer/.tmux.conf /root/.tmux.conf
 
 COPY .devcontainer/docker-entrypoint.d /docker-entrypoint.d
 RUN /docker-entrypoint.sh /bin/true
+
+ENTRYPOINT ["/bin/bash"]
