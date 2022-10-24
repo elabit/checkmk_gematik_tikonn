@@ -48,6 +48,6 @@ RUN echo ". /root/.bash_aliases" >> /root/.bashrc
 COPY .devcontainer/.tmux.conf /root/.tmux.conf
 
 # COPY .devcontainer/docker-entrypoint.d /docker-entrypoint.d
-# RUN /docker-entrypoint.sh /bin/true
+RUN bash /docker-entrypoint.sh /bin/true
 
 USER gitpod
