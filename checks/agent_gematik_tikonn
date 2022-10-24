@@ -9,9 +9,12 @@ def agent_gematik_tikonn_arguments(params, hostname, ipaddress):
     wsdl_v_eventservice = params["wsdl_versions"][0]
     wsdl_v_signatureservice = params["wsdl_versions"][1]
     workplace_ids = ",".join(params["workplace_ids"])
+
     args = [
         "--hostname",
         ipaddress,
+        "--port",
+        str(params["port"]),
         "--mandant",
         params["mandant_id"],
         "--client",
@@ -23,6 +26,10 @@ def agent_gematik_tikonn_arguments(params, hostname, ipaddress):
         "--wsdlversion",
         "SignatureService:{}".format(wsdl_v_signatureservice),
     ]
+
+    if params["verify_ssl"]:
+        args.append("--verifyssl")
+
     return args
 
 

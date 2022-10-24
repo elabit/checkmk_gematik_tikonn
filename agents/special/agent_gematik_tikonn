@@ -12,6 +12,9 @@ import re
 import os
 import sys
 from zeep import helpers, Client, Settings
+from requests import Session
+from zeep.transports import Transport
+
 import zeep
 import datetime
 import hashlib
@@ -48,6 +51,7 @@ class AgentGematikKonnektor:
         parser.add_argument(
             "-p", "--port", dest="port", default=80, required=False, help="TCP Port"
         )
+        parser.add_argument("--verifyssl", default=False, action="store_true")
         parser.add_argument(
             "-m",
             "--mandant",
@@ -73,6 +77,10 @@ class AgentGematikKonnektor:
         return parser.parse_args(argv)
 
     def main(self, args: Args):
+        if not args.verifyssl:
+            os.environ.pop("REQUESTS_CA_BUNDLE", None)
+            os.environ.pop("CURL_CA_BUNDLE", None)
+
         kontexts = [
             Kontext(args.mandant_id, args.client_id, workplace_id)
             for workplace_id in args.workplace_ids.split(",")
@@ -81,11 +89,11 @@ class AgentGematikKonnektor:
         # Todo Section manager
 
         strategy = EventServiceGetResourceInformation()
-        session = Session(konnektor, strategy, kontexts)
+        session = KonnektorSession(konnektor, strategy, kontexts, args.port)
         session.produce_output()
 
         strategy = EventServiceGetCardTerminals()
-        session = Session(konnektor, strategy, kontexts)
+        session = KonnektorSession(konnektor, strategy, kontexts, args.port)
         session.produce_output()
 
 
@@ -127,16 +135,12 @@ class Konnektor(object):
         else:
             self.sds_path = sds_path
 
-        # self.last_request = ""
-        # self.last_response = ""
-        # self.last_statuscode = 0
-        # self.last_message = ""
-        # self.last_reply_headers = ""
-        # self.last_reply_body = ""
-
     @property
     def url(self):
-        return "http://" + self.ip_address + ":" + str(self.port)
+        if self.port == "443":
+            return "https://" + self.ip_address + ":" + str(self.port)
+        else:
+            return "http://" + self.ip_address + ":" + str(self.port)
 
 
 def zeep2dict(f_wrapped):
@@ -489,14 +493,15 @@ class PiggybackGroup:
 
 
 # Context
-class Session:
-    def __init__(self, konnektor: Konnektor, service: EventService, kontexts):
+class KonnektorSession:
+    def __init__(self, konnektor: Konnektor, service: EventService, kontexts, port):
         self.service = service
         self.konnektor = konnektor
         if not type(kontexts) == list:
             self.kontexts = [kontexts]
         else:
             self.kontexts = kontexts
+        self.port = port
         self.zeep_settings = Settings(forbid_entities=False)
         self._client = None
 
@@ -523,9 +528,16 @@ class Session:
     @property
     def client(self):
         if self._client is None:
-            # TODO: How can WSDL be loaded from variable?
-            # HEREIWAS
-            self._client = Client(str(self.service.wsdl), settings=self.zeep_settings)
+            # SSL support
+            transport = None
+            if self.port == "443":
+                sess = Session()
+                sess.verify = False
+                transport = Transport(session=sess)
+
+            self._client = Client(
+                str(self.service.wsdl), transport=transport, settings=self.zeep_settings
+            )
         return self._client
 
     @property

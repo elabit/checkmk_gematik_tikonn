@@ -9,16 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-### Changed
+- HTTPS/TLS support (#4)
+
 
 ### Fixed
 
 - Default params für Discovery ergänzt (#3)
-### Removed
-
-### Deprecated
-
-
+- Custom HTTP port übergabe gefixt (#1)
 
 ### Changed
 
