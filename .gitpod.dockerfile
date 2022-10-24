@@ -17,12 +17,12 @@ RUN apt-get install -y wget
 RUN export DEBIAN_FRONTEND=noninteractive \ 
     && apt-get -y install build-essential libreadline-gplv2-dev libncursesw5-dev \
     libssl-dev libsqlite3-dev tk-dev libgdbm-dev libc6-dev libbz2-dev libffi-dev zlib1g-dev
-RUN cd /tmp && wget https://www.python.org/ftp/python/3.9.4/Python-3.9.4.tgz \
-    && tar xzf Python-3.9.4.tgz  \
-    && cd Python-3.9.4 \
-    && ./configure \
-    && make build_all \
-    && make install
+# RUN cd /tmp && wget https://www.python.org/ftp/python/3.9.4/Python-3.9.4.tgz \
+#     && tar xzf Python-3.9.4.tgz  \
+#     && cd Python-3.9.4 \
+#     && ./configure \
+#     && make build_all \
+#     && make install
 
 
 RUN export DEBIAN_FRONTEND=noninteractive \
@@ -31,8 +31,8 @@ RUN export DEBIAN_FRONTEND=noninteractive \
 # install default python modules. 
 # Project dependencies can either be installed in postCreateCommend.sh (using the default Docker image)
 # or in the Dockerfile (resulting in a project-wise Docker image), see Ref #6TEtDq
-ADD .devcontainer/requirements.txt /tmp/requirements.txt
-RUN pip3 install -r /tmp/requirements.txt
+# ADD .devcontainer/requirements.txt /tmp/requirements.txt
+# RUN pip3 install -r /tmp/requirements.txt
 
 # Site
 ENV CMK_SITE_ID="gitpod"
@@ -49,4 +49,4 @@ COPY .devcontainer/.tmux.conf /root/.tmux.conf
 COPY .devcontainer/docker-entrypoint.d /docker-entrypoint.d
 RUN /docker-entrypoint.sh /bin/true
 
-ENTRYPOINT ["/bin/bash"]
+ENTRYPOINT ["tail", "-f", "/dev/null"]
