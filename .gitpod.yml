@@ -1,14 +1,15 @@
 image:
   file: .gitpod.dockerfile
 
-#tasks:
-# - init: |
-#     python -m venv venv
-#     source venv/bin/activate
-#     pip install --upgrade pip wheel setuptools
-#     pip install Django
-#     python manage.py migrate
-# - command: |
+tasks:
+  # - init: |
+  #     python -m venv venv
+  #     source venv/bin/activate
+  #     pip install --upgrade pip wheel setuptools
+  #     pip install Django
+  #     python manage.py migrate
+  - command: |
+      whoami
 #     source venv/bin/activate
 #     python manage.py runserver
 
