@@ -226,6 +226,7 @@ Auf Wunsch kann der [DCD](https://docs.checkmk.com/latest/de/dcd.html) eingesetz
   - Administrator-Handbücher Kocobox: https://www.kococonnector.com/deu_de/downloads/kocobox-med.html
     - v4.2.16
     - v2.3.24
+  - https://enbyn.de/ti-installation/ (langer Blog-Artikel mit Portliste etc.) 
 - Gematik 
   - Konnektor-info allgemein: https://fachportal.gematik.de/hersteller-anbieter/komponenten-dienste/konnektor
   - Spezifikation Konnektor: https://fachportal.gematik.de/fachportal-import/files/gemSpec_Kon_V5.9.5.pdf
