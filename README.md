@@ -38,7 +38,7 @@ Der Agent wurde vom [Krankenhaus des Landkreises Weilheim-Schongau](https://www.
    * [CREDITS](#credits)
 
 <!-- Created by https://github.com/ekalinin/github-markdown-toc -->
-<!-- Added by: runner, at: Fri Oct 21 09:04:51 UTC 2022 -->
+<!-- Added by: runner, at: Fri Nov  4 07:02:39 UTC 2022 -->
 
 <!--te-->
 
