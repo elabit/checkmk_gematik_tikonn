@@ -25,7 +25,7 @@ Der Agent wurde vom [Krankenhaus des Landkreises Weilheim-Schongau](https://www.
    * [Inhalt](#inhalt)
    * [Features](#features)
    * [DISCLAIMER](#disclaimer)
-   * [Tester gesucht! <g-emoji class="g-emoji" alias="man_scientist" fallback-src="https://github.githubassets.com/images/icons/emoji/unicode/1f468-1f52c.png">👨‍🔬</g-emoji>](#tester-gesucht-)
+   * [Tester gesucht! 👨‍🔬](#tester-gesucht-)
    * [DEVELOPMENT](#development)
    * [Voraussetzungen und Installation](#voraussetzungen-und-installation)
       * [Python-Modul "zeep"](#python-modul-zeep)
@@ -43,7 +43,7 @@ Der Agent wurde vom [Krankenhaus des Landkreises Weilheim-Schongau](https://www.
    * [CREDITS](#credits)
 
 <!-- Created by https://github.com/ekalinin/github-markdown-toc -->
-<!-- Added by: runner, at: Fri Nov  4 07:02:39 UTC 2022 -->
+<!-- Added by: runner, at: Mon Oct  2 16:29:20 UTC 2023 -->
 
 <!--te-->
 
