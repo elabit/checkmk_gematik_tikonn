@@ -1,3 +1,8 @@
+🚨 Mangels Testumgebungen kann ich dieses Projekt derzeit nicht weiterführen. 
+Seht Euch bitte [hier](https://github.com/Kleinrotti/checkmk_telematik) um.
+
+---
+
 # Checkmk Monitoring für Gematik TI-Konnektoren
 
 [![MKP-Build](https://github.com/elabit/checkmk_gematik_tikonn/actions/workflows/mkp-build.yml/badge.svg)](https://github.com/elabit/checkmk_gematik_tikonn/actions/workflows/mkp-build.yml) [![MKP-Build-Release](https://github.com/elabit/checkmk_gematik_tikonn/actions/workflows/mkp-build-release.yml/badge.svg)](https://github.com/elabit/checkmk_gematik_tikonn/actions/workflows/mkp-build-release.yml) [![MD TOC](https://github.com/elabit/checkmk_gematik_tikonn/actions/workflows/md-toc.yml/badge.svg)](https://github.com/elabit/checkmk_gematik_tikonn/actions/workflows/md-toc.yml)
