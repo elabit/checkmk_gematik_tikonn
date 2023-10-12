@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 
 # from tzlocal import get_localzone
 import json
-import dateutil
+import dateutil.parser
 from .agent_based_api.v1 import (
     register,
     Result,
